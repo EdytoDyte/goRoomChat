@@ -1,0 +1,43 @@
+Chapter 1: Introduction
+
+Tommy was a bright young boy with a passion for programming. 
+He had been fascinated by computers since he was a little kid, 
+and he was always eager to learn more about them. One day, 
+his father brought home a new book about Go,
+ a programming language that was quickly becoming one of the most popular in the world. 
+Tommy was immediately intrigued, and he knew that he had to try it out for himself.
+
+Chapter 2: Getting Started
+
+Tommy started by installing Go on his computer and downloading an IDE.
+ He opened up the editor and started playing around with the language, 
+trying out different commands and experimenting with different code snippets. 
+He was amazed at how easy it was to get started with Go, 
+and he quickly felt comfortable with the syntax and structure of the language.
+
+Chapter 3: Hello, World!
+
+Tommy decided that his first project in Go would be to write a "Hello, World!" program. 
+He opened up the editor, typed in the code, and hit the run button.
+ To his delight, the program output "Hello, World!" on the screen, and he felt a sense of pride and accomplishment.
+
+Chapter 4: Building a Simple Web Server
+
+Tommy was eager to tackle a more challenging project, 
+so he decided to build a simple web server in Go. 
+He spent several hours reading through documentation and examples, and before long, 
+he had written a program that could handle incoming HTTP requests and serve up a static HTML page. 
+He was impressed by how powerful and flexible Go was, and he felt that he was just scratching the surface of what the language was capable of.
+
+Chapter 5: Going Further
+
+Tommy continued to build more complex projects in Go, 
+such as a chat application and a REST API. He was constantly learning new things,
+ and he was always eager to push the boundaries of what he could do with the language.
+ He was soon considered one of the best young programmers in his area, and he was approached by several companies to do freelance work.
+
+Chapter 6: Conclusion
+
+Tommy's journey with Go was just the beginning of a lifelong love affair with programming. 
+He continued to use the language for many years, and he always looked back on his first steps with a sense of pride and accomplishment. 
+Go had opened up a world of possibilities for him, and he was grateful for the opportunity to learn and grow with the language.
