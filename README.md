@@ -2,6 +2,8 @@
 
 Messaging Program
 
+The project is set up to work locally, please note that if you want to make it work globally, you will need to change the configuration of the client.
+
 Communicate with other users through virtual chat rooms with our messaging program. With the following options available:
 
 --- Create Room ---
