@@ -84,7 +84,7 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 // Allows the user to input their username and send it to the server.
 func getUser(conn net.Conn) {
 	time.Sleep(2 * time.Second)
-	fmt.Println("::: Introduce tu nombre de usuario  :::")
+	fmt.Print("::: Introduce your username  :::\n")
 	username, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	conn.Write([]byte(username))
 }
