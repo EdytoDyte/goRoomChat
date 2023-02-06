@@ -86,7 +86,14 @@ func getUser(conn net.Conn) {
 	time.Sleep(2 * time.Second)
 	fmt.Print("::: Introduce your username  :::\n")
 	username, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	conn.Write([]byte(username))
+	username = strings.TrimRight(username, "\n")
+	username = strings.TrimSpace(username)
+	if username != "" {
+		conn.Write([]byte(username))
+	} else {
+		fmt.Print("::: The username cannot be blank :::\n")
+		nombreSala(conn)
+	}
 }
 
 // Prompts the user to select an option: create a room, join a room, or exit the app. The user's selection is sent to the server.
@@ -114,10 +121,15 @@ func option(conn net.Conn) {
 // Prompts the user to enter the name of the chat room they want to join or create.
 func nombreSala(conn net.Conn) {
 	fmt.Println("::: Enter room name  :::")
-	nombreSala, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	nombreSala = strings.TrimRight(nombreSala, "\n")
-	nombreSala = strings.TrimSpace(nombreSala)
-	conn.Write([]byte(nombreSala + "\n"))
+	nombresala, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	nombresala = strings.TrimRight(nombresala, "\n")
+	nombresala = strings.TrimSpace(nombresala)
+	if nombresala != "" {
+		conn.Write([]byte(nombresala + "\n"))
+	} else {
+		fmt.Print("::: The room name cannot be blank :::\n")
+		nombreSala(conn)
+	}
 }
 
 // Handles sending messages from the user to the server. The messages are encrypted using RSA encryption before being sent.
