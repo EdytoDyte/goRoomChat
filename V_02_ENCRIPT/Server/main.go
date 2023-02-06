@@ -123,7 +123,7 @@ func joinRoom(conexion net.Conn, salaName string, pubkiclkey *rsa.PublicKey) {
 	}
 	// If it doesn't find the room, it will create it
 	if r == nil {
-		fmt.Println("The room has been created: " + salaName)
+		fmt.Println("::: The room has been created: " + salaName + " :::")
 		p1, p2 := getHash(conexion)                                 // We get the room's private key and public key
 		r = &room{nombre: salaName, privateKey: p1, publickKey: p2} // We create the room with the parameters we have obtained
 		rooms = append(rooms, *r)                                   // We add it to the rooms array
