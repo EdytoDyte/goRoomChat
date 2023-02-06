@@ -90,9 +90,8 @@ func handleConnection(conexion net.Conn, conexiones map[net.Conn]string) {
 				break
 			}
 		}
-		fmt.Print(r.nombre)
+		fmt.Print("Room name:" + r.nombre)
 		abc := desencriptar(message.Mensaje, r.privateKey) // Decrypt with the room's private key
-		fmt.Print(string(abc) + "\n")
 		if err != nil {
 			fmt.Println("Connection closed")
 			return
@@ -110,7 +109,7 @@ func joinRoom(conexion net.Conn, salaName string, pubkiclkey *rsa.PublicKey) {
 	var r *room            // Pointer to the room structure
 	for i := range rooms { // Rooms loop
 		if rooms[i].nombre == salaName { // Searches for the room with the name passed by the function
-			fmt.Println("The user has adde to the room - " + salaName)
+			fmt.Println("The user has added to the room - " + salaName)
 			r = &rooms[i]                                        // A reference is made to the room
 			pemKey, _ := x509.MarshalPKIXPublicKey(r.publickKey) // The public key is parsed
 			keyss := keys{                                       // Json object
