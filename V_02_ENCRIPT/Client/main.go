@@ -47,8 +47,7 @@ func main() {
 	fmt.Println(":::   Select your option   :::")
 	option(conn)
 	getUser(conn)
-	fmt.Println("::: You can send messages now :::")
-	mensajes(conn)
+	IniGu(Roomname, conn)
 }
 
 // Handles incoming messages from the server. It reads the messages, unmarshals the JSON, decrypts the messages using RSA encryption, and prints them to the console.
@@ -70,14 +69,9 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 			fmt.Println("Connection closed")
 			return
 		}
-		var message msges
-		err2 := json.Unmarshal([]byte(mensajes), &message)
-		if err2 != nil {
-			fmt.Println(err)
-			return
-		}
-		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
-		fmt.Print(string(mesDesen))
+
+		Mensaje = string(mensajes)
+		recivedMessages(GoCui)
 	}
 }
 
@@ -90,6 +84,8 @@ func getUser(conn net.Conn) {
 	username = strings.TrimSpace(username)
 	if username != "" {
 		conn.Write([]byte(username))
+		conn.Write([]byte("\n"))
+
 	} else {
 		fmt.Print("::: The username cannot be blank :::\n")
 		nombreSala(conn)
@@ -124,27 +120,12 @@ func nombreSala(conn net.Conn) {
 	nombresala, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	nombresala = strings.TrimRight(nombresala, "\n")
 	nombresala = strings.TrimSpace(nombresala)
+	Roomname = nombresala
 	if nombresala != "" {
 		conn.Write([]byte(nombresala + "\n"))
 	} else {
 		fmt.Print("::: The room name cannot be blank :::\n")
 		nombreSala(conn)
-	}
-}
-
-// Handles sending messages from the user to the server. The messages are encrypted using RSA encryption before being sent.
-func mensajes(conn net.Conn) {
-	for {
-		mensajes, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		mensajes = strings.TrimRight(mensajes, "\n")
-		mensajes = strings.TrimSpace(mensajes)
-		msgEn, _ := encriptar([]byte(mensajes), publicKey)
-		message := msges{
-			Mensaje: msgEn,
-		}
-		msgJson, _ := json.Marshal(message)
-		conn.Write(msgJson)
-		conn.Write([]byte("\n"))
 	}
 }
 
