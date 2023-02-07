@@ -27,7 +27,6 @@ Our messaging program provides users with a convenient and secure way to communi
 
 Example 1:
 
-<br>
 When we start the program, these options will appear.
 <br>
 ![image](https://user-images.githubusercontent.com/107671943/217294141-cc7faa6b-f878-43b5-8339-75be74c1dba0.png)
