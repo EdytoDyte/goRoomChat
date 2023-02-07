@@ -26,10 +26,19 @@ Send regular, non-encrypted messages.
 Our messaging program provides users with a convenient and secure way to communicate with each other, with a range of options to suit their needs.
 
 Example 1:
+
+<br>
 When we start the program, these options will appear.
+<br>
 ![image](https://user-images.githubusercontent.com/107671943/217294141-cc7faa6b-f878-43b5-8339-75be74c1dba0.png)
+<br>
 For example, if we choose the first option, we will create a room and we will have to add its name and our username.
+<br>
 ![image](https://user-images.githubusercontent.com/107671943/217294812-3fc3fbd6-e67b-43c7-9654-8546b0ffa530.png)
+<br>
 Finally, a chat room will appear in which we can talk
+<br>
 ![image](https://user-images.githubusercontent.com/107671943/217295408-05fdabf7-ec62-4ca4-bef2-81f58210ed76.png)
+<br>
 ![image](https://user-images.githubusercontent.com/107671943/217295474-5fa89414-46df-4221-be68-eb135e9a7cc6.png)
+<br>
