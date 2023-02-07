@@ -32,7 +32,6 @@ type msges struct {
 }
 
 // Array to store chat rooms.
-
 var rooms []room
 
 func main() {
@@ -90,7 +89,7 @@ func handleConnection(conexion net.Conn, conexiones map[net.Conn]string) {
 				break
 			}
 		}
-		fmt.Print("Room name:" + r.nombre)
+		fmt.Print("::: Room name:" + r.nombre)
 		abc := desencriptar(message.Mensaje, r.privateKey) // Decrypt with the room's private key
 		if err != nil {
 			fmt.Println("Connection closed")
@@ -123,7 +122,7 @@ func joinRoom(conexion net.Conn, salaName string, pubkiclkey *rsa.PublicKey) {
 	}
 	// If it doesn't find the room, it will create it
 	if r == nil {
-		fmt.Println("::: The room has been created: " + salaName + " :::")
+		fmt.Println("::: The room has been created: " + salaName)
 		p1, p2 := getHash(conexion)                                 // We get the room's private key and public key
 		r = &room{nombre: salaName, privateKey: p1, publickKey: p2} // We create the room with the parameters we have obtained
 		rooms = append(rooms, *r)                                   // We add it to the rooms array
@@ -187,5 +186,4 @@ func getHash(conn net.Conn) (*rsa.PrivateKey, *rsa.PublicKey) {
 	conn.Write(public)
 	conn.Write([]byte("\n"))
 	return privatekey, publickey
-
 }
