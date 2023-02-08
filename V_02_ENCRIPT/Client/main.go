@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 )
 
 type keys struct {
@@ -25,6 +24,7 @@ var privateKey *rsa.PrivateKey //<-- private key from the client
 var publicKey *rsa.PublicKey   //<-- public key from the server
 var publicKeySD *rsa.PublicKey //<-- public key from the client
 
+var key bool //<--- Check if we got the key from the server
 // The code is a chat client that communicates with a chat server using the TCP protocol. It allows the user to either create a chat room or join an existing one. The chat messages are encrypted using RSA encryption.
 func main() {
 	conn, err := net.Dial("tcp", "localhost:8080")
@@ -47,7 +47,7 @@ func main() {
 	fmt.Println(":::   Select your option   :::")
 	option(conn)
 	getUser(conn)
-	IniGu(Roomname, conn)
+
 }
 
 // Handles incoming messages from the server. It reads the messages, unmarshals the JSON, decrypts the messages using RSA encryption, and prints them to the console.
@@ -61,8 +61,11 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 		return
 	}
 	pubkey, _ := x509.ParsePKIXPublicKey(Clavese.Publick)
-	publicKey = pubkey.(*rsa.PublicKey)
 	fmt.Print("::: We recived the key from the server :::\n")
+	publicKey = pubkey.(*rsa.PublicKey)
+	if publicKey != nil {
+		key = true
+	}
 	for {
 		mensajes, err := bufio.NewReader(conexion).ReadString('\n')
 		if err != nil {
@@ -77,19 +80,32 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 
 // Allows the user to input their username and send it to the server.
 func getUser(conn net.Conn) {
-	time.Sleep(2 * time.Second)
-	fmt.Print("::: Introduce your username  :::\n")
-	username, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	username = strings.TrimRight(username, "\n")
-	username = strings.TrimSpace(username)
-	if username != "" {
-		conn.Write([]byte(username))
-		conn.Write([]byte("\n"))
+	mssagedPrinted := false
+	for {
+		if key {
+			fmt.Print("::: Introduce your username  :::\n")
+			username, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+			username = strings.TrimRight(username, "\n")
+			username = strings.TrimSpace(username)
+			if username != "" {
+				conn.Write([]byte(username))
+				conn.Write([]byte("\n"))
+				IniGu(conn)
+			} else {
+				fmt.Print("::: The username cannot be blank :::\n")
+				nombreSala(conn)
+			}
+			break
+		} else {
+			if !mssagedPrinted {
+				fmt.Print("::: Waiting key from the server :::\n")
+				mssagedPrinted = true
 
-	} else {
-		fmt.Print("::: The username cannot be blank :::\n")
-		nombreSala(conn)
+			}
+
+		}
 	}
+
 }
 
 // Prompts the user to select an option: create a room, join a room, or exit the app. The user's selection is sent to the server.

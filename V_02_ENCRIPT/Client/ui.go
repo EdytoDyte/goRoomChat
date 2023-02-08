@@ -9,12 +9,13 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+// Variable on UI.GO
 var Roomname = ""
 var connec net.Conn
 var Mensaje string
 var GoCui *gocui.Gui
 
-func IniGu(roomName string, conecct net.Conn) (*gocui.Gui, error) {
+func IniGu(conecct net.Conn) (*gocui.Gui, error) {
 	connec = conecct
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
