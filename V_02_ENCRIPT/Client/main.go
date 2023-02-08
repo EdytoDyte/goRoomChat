@@ -23,8 +23,9 @@ type msges struct {
 var privateKey *rsa.PrivateKey //<-- private key from the client
 var publicKey *rsa.PublicKey   //<-- public key from the server
 var publicKeySD *rsa.PublicKey //<-- public key from the client
-
+var NameRoom string
 var key bool //<--- Check if we got the key from the server
+
 // The code is a chat client that communicates with a chat server using the TCP protocol. It allows the user to either create a chat room or join an existing one. The chat messages are encrypted using RSA encryption.
 func main() {
 	conn, err := net.Dial("tcp", "localhost:8080")
@@ -73,8 +74,15 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 			return
 		}
 
-		Mensaje = string(mensajes)
-		recivedMessages(GoCui)
+		Mensaje := string(mensajes)
+		var message msges
+		err2 := json.Unmarshal([]byte(Mensaje), &message)
+		if err2 != nil {
+			fmt.Print(err2)
+		}
+		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
+
+		recivedMessages(mesDesen)
 	}
 }
 
@@ -91,9 +99,10 @@ func getUser(conn net.Conn) {
 				conn.Write([]byte(username))
 				conn.Write([]byte("\n"))
 				IniGu(conn)
+
 			} else {
 				fmt.Print("::: The username cannot be blank :::\n")
-				nombreSala(conn)
+				getUser(conn)
 			}
 			break
 		} else {
@@ -136,8 +145,9 @@ func nombreSala(conn net.Conn) {
 	nombresala, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	nombresala = strings.TrimRight(nombresala, "\n")
 	nombresala = strings.TrimSpace(nombresala)
-	Roomname = nombresala
 	if nombresala != "" {
+		NameRoom = nombresala
+
 		conn.Write([]byte(nombresala + "\n"))
 	} else {
 		fmt.Print("::: The room name cannot be blank :::\n")

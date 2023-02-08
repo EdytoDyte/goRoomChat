@@ -10,9 +10,8 @@ import (
 )
 
 // Variable on UI.GO
-var Roomname = ""
+
 var connec net.Conn
-var Mensaje string
 var GoCui *gocui.Gui
 
 func IniGu(conecct net.Conn) (*gocui.Gui, error) {
@@ -56,7 +55,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Title = "::: Room: " + Roomname + " --- Messages :::"
+		v.Title = "::: Room: " + NameRoom + " --- Messages :::"
 		v.Wrap = true
 		v.Autoscroll = true
 
@@ -96,24 +95,19 @@ func sendMessage(g *gocui.Gui, v *gocui.View) error {
 
 	return nil
 }
-func recivedMessages(g *gocui.Gui) error {
+func recivedMessages(mesDesen []byte) error {
+	for {
+		GoCui.Update(func(g *gocui.Gui) error {
+			v, err := g.View("messages")
+			if err != nil {
+				fmt.Print(err)
+				return err
+			}
 
-	g.Update(func(g *gocui.Gui) error {
-		v, err := g.View("messages")
-		if err != nil {
-			return err
-		}
-		var message msges
-		err2 := json.Unmarshal([]byte(Mensaje), &message)
-		if err2 != nil {
+			fmt.Fprint(v, string(mesDesen))
 
-			return err2
-		}
-		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
-		fmt.Fprint(v, string(mesDesen))
-
+			return nil
+		})
 		return nil
-	})
-	return nil
-
+	}
 }
