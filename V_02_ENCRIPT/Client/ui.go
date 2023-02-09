@@ -95,19 +95,15 @@ func sendMessage(g *gocui.Gui, v *gocui.View) error {
 
 	return nil
 }
-func recivedMessages(mesDesen []byte) error {
-	for {
-		GoCui.Update(func(g *gocui.Gui) error {
-			v, err := g.View("messages")
-			if err != nil {
-				fmt.Print(err)
-				return err
-			}
+func updateView(g *gocui.Gui, mesDesen []byte) {
+	g.Update(func(g *gocui.Gui) error {
+		v, err := GoCui.View("messages")
+		if err != nil {
+			fmt.Print(err)
+			return err
+		}
+		fmt.Fprint(v, string(mesDesen))
 
-			fmt.Fprint(v, string(mesDesen))
-
-			return nil
-		})
-		return nil
-	}
+		return layout(g)
+	})
 }

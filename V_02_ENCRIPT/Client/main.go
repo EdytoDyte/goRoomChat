@@ -59,31 +59,16 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 	err := json.Unmarshal([]byte(hash), &Clavese)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 	pubkey, _ := x509.ParsePKIXPublicKey(Clavese.Publick)
-	fmt.Print("::: We recived the key from the server :::\n")
 	publicKey = pubkey.(*rsa.PublicKey)
+	fmt.Print("::: We recived the key from the server :::\n")
 	if publicKey != nil {
 		key = true
-	}
-	for {
-		mensajes, err := bufio.NewReader(conexion).ReadString('\n')
-		if err != nil {
-			fmt.Println("Connection closed")
-			return
-		}
+		getMessages(conexion)
 
-		Mensaje := string(mensajes)
-		var message msges
-		err2 := json.Unmarshal([]byte(Mensaje), &message)
-		if err2 != nil {
-			fmt.Print(err2)
-		}
-		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
-
-		recivedMessages(mesDesen)
 	}
+
 }
 
 // Allows the user to input their username and send it to the server.
@@ -98,6 +83,7 @@ func getUser(conn net.Conn) {
 			if username != "" {
 				conn.Write([]byte(username))
 				conn.Write([]byte("\n"))
+
 				IniGu(conn)
 
 			} else {
@@ -133,6 +119,7 @@ func option(conn net.Conn) {
 		fmt.Print("::: Joining a room :::\n")
 	case "3":
 		fmt.Println("You chose to exit the app.")
+		os.Exit(0)
 	default:
 		fmt.Println("Invalid option.")
 		option(conn)
@@ -192,4 +179,23 @@ func desencriptar(msg []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 		return nil, err
 	}
 	return mensaje, nil
+}
+func getMessages(conexion net.Conn) {
+
+	for {
+		mensajes, err := bufio.NewReader(conexion).ReadString('\n')
+		if err != nil {
+			fmt.Println("Connection closed")
+			return
+		}
+
+		Mensaje := string(mensajes)
+		var message msges
+		err2 := json.Unmarshal([]byte(Mensaje), &message)
+		if err2 != nil {
+			fmt.Print(err2)
+		}
+		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
+		updateView(GoCui, mesDesen)
+	}
 }
