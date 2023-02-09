@@ -23,7 +23,12 @@ func IniGu(conecct net.Conn) (*gocui.Gui, error) {
 	GoCui = g
 	defer g.Close()
 	g.SetManagerFunc(layout)
-
+	msg := keys{
+		Protocol: []byte("Ok"),
+	}
+	public, _ := json.Marshal(msg)
+	conecct.Write(public)
+	conecct.Write([]byte("\n"))
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		fmt.Print(err)
 	}
@@ -96,6 +101,7 @@ func sendMessage(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 func updateView(g *gocui.Gui, mesDesen []byte) {
+
 	g.Update(func(g *gocui.Gui) error {
 		v, err := GoCui.View("messages")
 		if err != nil {
