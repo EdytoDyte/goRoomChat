@@ -74,6 +74,8 @@ func handleConnection(conexion net.Conn, conexiones map[net.Conn]string) {
 	joinRoom(conexion, nombreSala, pubkey)
 	username, _ := bufio.NewReader(conexion).ReadString('\n') // User reader
 	conexiones[conexion] = username
+	username = strings.TrimRight(username, "\n")
+	username = strings.TrimSpace(username)
 	fmt.Print("The user has entered to the room:" + username)
 
 	for {
@@ -82,27 +84,32 @@ func handleConnection(conexion net.Conn, conexiones map[net.Conn]string) {
 		var message msges                                           // Initialize a variable that will be the json container
 		err2 := json.Unmarshal([]byte(mensajes), &message)          // Parse the json to be able to read it
 		if err2 != nil {
+			broadcast("::: The user "+username+" has left the room :::\n", nombreSala)
 			fmt.Println(err)
 			return
 		}
-		// Know the room's private key
-		var r *room // Pointer to the room structure
-		for i := range rooms {
-			if rooms[i].nombre == nombreSala {
-				r = &rooms[i] // Reference to the room we are using
-				break
+		if string(message.Protocol) == "Ok" {
+			broadcast("::: The user "+username+" has joined the room :::\n", nombreSala)
+		} else {
+			// Know the room's private key
+			var r *room // Pointer to the room structure
+			for i := range rooms {
+				if rooms[i].nombre == nombreSala {
+					r = &rooms[i] // Reference to the room we are using
+					break
+				}
 			}
+			fmt.Print("::: Room name:" + r.nombre)
+			abc := desencriptar(message.Mensaje, r.privateKey) // Decrypt with the room's private key
+			if err != nil {
+				fmt.Println("Connection closed")
+				return
+			}
+			user := strings.TrimSpace(conexiones[conexion])  // Clear whitespaces from the user
+			msg := string(user + " : " + string(abc) + "\n") // Format text
+			fmt.Print(msg)                                   // Display on screen
+			broadcast(msg, nombreSala)                       // Send to all in the room
 		}
-		fmt.Print("::: Room name:" + r.nombre)
-		abc := desencriptar(message.Mensaje, r.privateKey) // Decrypt with the room's private key
-		if err != nil {
-			fmt.Println("Connection closed")
-			return
-		}
-		user := strings.TrimSpace(conexiones[conexion])  // Clear whitespaces from the user
-		msg := string(user + " : " + string(abc) + "\n") // Format text
-		fmt.Print(msg)                                   // Display on screen
-		broadcast(msg, nombreSala)                       // Send to all in the room
 	}
 }
 
@@ -116,7 +123,8 @@ func joinRoom(conexion net.Conn, salaName string, pubkiclkey *rsa.PublicKey) {
 			r = &rooms[i]                                        // A reference is made to the room
 			pemKey, _ := x509.MarshalPKIXPublicKey(r.publickKey) // The public key is parsed
 			keyss := keys{                                       // Json object
-				Publick: pemKey,
+				Protocol: []byte("key"),
+				Publick:  pemKey,
 			}
 			public, _ := json.Marshal(keyss) // It is transformed into a json object and parsed
 			conexion.Write(public)           // It is sent to the client to obtain the server's public key
