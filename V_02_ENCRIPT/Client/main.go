@@ -14,10 +14,12 @@ import (
 )
 
 type keys struct {
-	Publick []byte
+	Protocol []byte
+	Publick  []byte
 }
 type msges struct {
-	Mensaje []byte
+	Protocol []byte
+	Mensaje  []byte
 }
 
 var privateKey *rsa.PrivateKey //<-- private key from the client
@@ -60,15 +62,17 @@ func handleIncomingMessages(conexion net.Conn, conexiones map[net.Conn]string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	pubkey, _ := x509.ParsePKIXPublicKey(Clavese.Publick)
-	publicKey = pubkey.(*rsa.PublicKey)
-	fmt.Print("::: We recived the key from the server :::\n")
-	if publicKey != nil {
-		key = true
-		getMessages(conexion)
+	if string(Clavese.Protocol) == "key" {
+		pubkey, _ := x509.ParsePKIXPublicKey(Clavese.Publick)
+		publicKey = pubkey.(*rsa.PublicKey)
+		fmt.Print("::: We recived the key from the server :::\n")
+		if publicKey != nil {
+			key = true
 
+			getMessages(conexion)
+
+		}
 	}
-
 }
 
 // Allows the user to input their username and send it to the server.
@@ -188,14 +192,15 @@ func getMessages(conexion net.Conn) {
 			fmt.Println("Connection closed")
 			return
 		}
-
 		Mensaje := string(mensajes)
 		var message msges
 		err2 := json.Unmarshal([]byte(Mensaje), &message)
-		if err2 != nil {
-			fmt.Print(err2)
+		if string(message.Protocol) == "msg" {
+			if err2 != nil {
+				fmt.Print(err2)
+			}
+			mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
+			updateView(GoCui, mesDesen)
 		}
-		mesDesen, _ := desencriptar([]byte(message.Mensaje), privateKey)
-		updateView(GoCui, mesDesen)
 	}
 }
