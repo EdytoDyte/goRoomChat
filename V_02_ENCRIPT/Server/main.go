@@ -23,12 +23,14 @@ type room struct {
 
 // We use this structure to receive the keys.
 type keys struct {
-	Publick []byte
+	Protocol []byte
+	Publick  []byte
 }
 
 // We use this structure to receive encrypted messages.
 type msges struct {
-	Mensaje []byte
+	Protocol []byte
+	Mensaje  []byte
 }
 
 // Array to store chat rooms.
@@ -73,7 +75,9 @@ func handleConnection(conexion net.Conn, conexiones map[net.Conn]string) {
 	username, _ := bufio.NewReader(conexion).ReadString('\n') // User reader
 	conexiones[conexion] = username
 	fmt.Print("The user has entered to the room:" + username)
+
 	for {
+
 		mensajes, err := bufio.NewReader(conexion).ReadString('\n') // Message reader
 		var message msges                                           // Initialize a variable that will be the json container
 		err2 := json.Unmarshal([]byte(mensajes), &message)          // Parse the json to be able to read it
@@ -139,7 +143,8 @@ func broadcast(mensaje string, nombreSala string) {
 			for j := range rooms[i].clientes { // Gets each client
 				msgEncript := encriptar([]byte(mensaje), rooms[i].keys[j])
 				message := msges{
-					Mensaje: msgEncript,
+					Mensaje:  msgEncript,
+					Protocol: []byte("msg"),
 				}
 				msgJson, _ := json.Marshal(message)
 				rooms[i].clientes[j].Write(msgJson) // Sends the message for each client
@@ -180,7 +185,8 @@ func getHash(conn net.Conn) (*rsa.PrivateKey, *rsa.PublicKey) {
 	publickey := &privatekey.PublicKey // <-- clave publica
 	pemKey, _ := x509.MarshalPKIXPublicKey(publickey)
 	keyss := keys{
-		Publick: pemKey,
+		Protocol: []byte("key"),
+		Publick:  pemKey,
 	}
 	public, _ := json.Marshal(keyss)
 	conn.Write(public)
