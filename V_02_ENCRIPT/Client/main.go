@@ -30,27 +30,29 @@ var key bool //<--- Check if we got the key from the server
 
 // The code is a chat client that communicates with a chat server using the TCP protocol. It allows the user to either create a chat room or join an existing one. The chat messages are encrypted using RSA encryption.
 func main() {
-	conn, err := net.Dial("tcp", "localhost:8080")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer conn.Close()
-	conns := make(map[net.Conn]string)
-	go handleIncomingMessages(conn, conns)
-	getHash(conn)
-	fmt.Println("::: Welcome to the Go Room Chat! :::")
-	fmt.Println("_______________________________")
-	fmt.Println("|          Options            |")
-	fmt.Println("|_____________________________|")
-	fmt.Println("|1. Create an chat room       |")
-	fmt.Println("|2. Join a chat room          |")
-	fmt.Println("|3. Exit the goRoomChat       |")
-	fmt.Println("|_____________________________|")
-	fmt.Println(":::   Select your option   :::")
-	option(conn)
-	getUser(conn)
+	for {
+		conn, err := net.Dial("tcp", "localhost:8080")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer conn.Close()
+		conns := make(map[net.Conn]string)
+		go handleIncomingMessages(conn, conns)
+		getHash(conn)
 
+		fmt.Println("::: Welcome to the Go Room Chat! :::")
+		fmt.Println("_______________________________")
+		fmt.Println("|          Options            |")
+		fmt.Println("|_____________________________|")
+		fmt.Println("|1. Create an chat room       |")
+		fmt.Println("|2. Join a chat room          |")
+		fmt.Println("|3. Exit the goRoomChat       |")
+		fmt.Println("|_____________________________|")
+		fmt.Println(":::   Select your option   :::")
+		option(conn)
+		getUser(conn)
+	}
 }
 
 // Handles incoming messages from the server. It reads the messages, unmarshals the JSON, decrypts the messages using RSA encryption, and prints them to the console.
@@ -185,7 +187,7 @@ func desencriptar(msg []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	return mensaje, nil
 }
 func getMessages(conexion net.Conn) {
-
+	fmt.Print("Hu")
 	for {
 		mensajes, err := bufio.NewReader(conexion).ReadString('\n')
 		if err != nil {

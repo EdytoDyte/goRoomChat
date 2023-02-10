@@ -35,6 +35,12 @@ func IniGu(conecct net.Conn) (*gocui.Gui, error) {
 	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, sendMessage); err != nil {
 		fmt.Print(err)
 	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlO, gocui.ModNone, close); err != nil {
+		fmt.Print(err)
+	}
+	if err := g.SetKeybinding("", gocui.KeyEsc, gocui.ModNone, close); err != nil {
+		fmt.Print(err)
+	}
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		fmt.Print(err)
 
@@ -112,4 +118,8 @@ func updateView(g *gocui.Gui, mesDesen []byte) {
 
 		return layout(g)
 	})
+}
+func close(g *gocui.Gui, v *gocui.View) error {
+	connec.Close()
+	return gocui.ErrQuit
 }
