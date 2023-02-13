@@ -23,19 +23,22 @@ func IniGu(conecct net.Conn) (*gocui.Gui, error) {
 	GoCui = g
 	defer g.Close()
 	g.SetManagerFunc(layout)
+	g.Mouse = true
 	msg := keys{
 		Protocol: []byte("Ok"),
 	}
 	public, _ := json.Marshal(msg)
 	conecct.Write(public)
 	conecct.Write([]byte("\n"))
+	g.Mouse = true
+
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		fmt.Print(err)
 	}
 	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, sendMessage); err != nil {
 		fmt.Print(err)
 	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlO, gocui.ModNone, close); err != nil {
+	if err := g.SetKeybinding("button", gocui.MouseLeft, gocui.ModNone, close); err != nil {
 		fmt.Print(err)
 	}
 	if err := g.SetKeybinding("", gocui.KeyEsc, gocui.ModNone, close); err != nil {
@@ -71,12 +74,24 @@ func layout(g *gocui.Gui) error {
 		v.Autoscroll = true
 
 	}
+	if v, err := g.SetView("button", maxX-24, 0, maxX-20, +2); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.SelBgColor = gocui.ColorWhite
+		v.FgColor = gocui.ColorBlack
+		v.BgColor = gocui.ColorWhite
+		v.Wrap = true
+		fmt.Fprintln(v, "<--")
+
+	}
 	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
+
 func setCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
 	if _, err := g.SetCurrentView(name); err != nil {
 		return nil, err
