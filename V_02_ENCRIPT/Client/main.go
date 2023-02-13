@@ -187,7 +187,7 @@ func desencriptar(msg []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
 	return mensaje, nil
 }
 func getMessages(conexion net.Conn) {
-	fmt.Print("Hu")
+
 	for {
 		mensajes, err := bufio.NewReader(conexion).ReadString('\n')
 		if err != nil {
