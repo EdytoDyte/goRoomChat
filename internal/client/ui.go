@@ -79,6 +79,9 @@ func (ui *UI) layout(g *gocui.Gui) error {
 			}
 		}
 	} else {
+		// "room" view is deleted in setRoom, "username" view is deleted in setUsername
+
+		// Create chat views
 		if v, err := g.SetView("messages", 0, 0, maxX-1, maxY-5); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
@@ -124,6 +127,7 @@ func (ui *UI) setRoom(g *gocui.Gui, v *gocui.View) error {
 		ui.client.JoinRoom(roomName)
 		ui.waitingForKey = true
 		g.DeleteView("room")
+		// Don't set current view yet, wait for key
 	}
 	return nil
 }
@@ -134,9 +138,6 @@ func (ui *UI) setUsername(g *gocui.Gui, v *gocui.View) error {
 		ui.username = username
 		ui.client.SendUsername(username)
 		g.DeleteView("username")
-		if _, err := g.SetCurrentView("input"); err != nil {
-			return err
-		}
 	}
 	return nil
 }
