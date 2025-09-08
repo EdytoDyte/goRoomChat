@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 
 	"github.com/Go-Chat/pkg/chat"
 )
@@ -41,8 +40,6 @@ func (c *Client) Start(addr string) error {
 	}
 	c.conn = conn
 	defer c.conn.Close()
-
-	c.sendPublicKey()
 
 	go c.handleIncomingMessages()
 
@@ -110,11 +107,18 @@ func (c *Client) SendMessage(message string) {
 }
 
 func (c *Client) JoinRoom(roomName string) {
+	pemKey := x509.MarshalPKCS1PublicKey(c.publicKey)
+	keyss := chat.Keys{
+		Publick: pemKey,
+	}
+	public, _ := json.Marshal(keyss)
+	c.conn.Write(public)
+	c.conn.Write([]byte("\n"))
 	c.conn.Write([]byte(roomName + "\n"))
 }
 
-func (c.Client) SendUsername(username string) {
-    c.conn.Write([]byte(username + "\n"))
+func (c *Client) SendUsername(username string) {
+	c.conn.Write([]byte(username + "\n"))
 }
 
 func (c *Client) encrypt(msg []byte) ([]byte, error) {
