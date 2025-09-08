@@ -21,7 +21,7 @@ Go Chat is a simple, secure, and real-time chat application written in Go. It al
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Go-Chat/go-chat.git
+   git clone https://github.com/EdytoDyte/goRoomChat.git
    ```
 2. Navigate to the project directory:
    ```bash
