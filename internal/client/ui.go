@@ -8,11 +8,12 @@ import (
 )
 
 type UI struct {
-	g         *gocui.Gui
-	client    *Client
-	serverKey bool
-	roomName  string
-	username  string
+	g             *gocui.Gui
+	client        *Client
+	serverKey     bool
+	roomName      string
+	username      string
+	waitingForKey bool
 }
 
 func NewUI(client *Client) *UI {
@@ -100,15 +101,13 @@ func (ui *UI) layout(g *gocui.Gui) error {
 		}
 	}
 
-	if !ui.serverKey {
+	if ui.waitingForKey && !ui.serverKey {
 		if v, err := g.SetView("popup", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
 			}
 			fmt.Fprintln(v, "Waiting for server key...")
 		}
-	} else {
-		g.DeleteView("popup")
 	}
 
 	return nil
@@ -123,10 +122,8 @@ func (ui *UI) setRoom(g *gocui.Gui, v *gocui.View) error {
 	if roomName != "" {
 		ui.roomName = roomName
 		ui.client.JoinRoom(roomName)
+		ui.waitingForKey = true
 		g.DeleteView("room")
-		if _, err := g.SetCurrentView("username"); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -167,7 +164,12 @@ func (ui *UI) UpdateMessages(message string) {
 
 func (ui *UI) SetServerKey(status bool) {
 	ui.serverKey = status
+	ui.waitingForKey = false
 	ui.g.Update(func(g *gocui.Gui) error {
+		g.DeleteView("popup")
+		if _, err := g.SetCurrentView("username"); err != nil {
+			return err
+		}
 		return ui.layout(g)
 	})
 }
