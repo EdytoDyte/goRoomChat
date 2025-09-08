@@ -83,7 +83,6 @@ func (s *Server) handleConnection(conn net.Conn) {
 		// Read message from client
 		message, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Server: Error reading from client, closing connection:", err)
 			s.broadcast(fmt.Sprintf("::: %s has left the room :::\n", username), room)
 			delete(room.Clients, conn)
 			return
