@@ -72,16 +72,22 @@ func (c *Client) handleIncomingMessages() {
 			fmt.Println("Connection closed")
 			os.Exit(0)
 		}
-
+		fmt.Println("Client: Received raw message from server:", message)
 		var msg chat.Msges
 		if err := json.Unmarshal([]byte(message), &msg); err != nil {
+				fmt.Println("Client: Failed to unmarshal as standard message. Trying as key...")
 			// It might be the server's public key
 			var keys chat.Keys
-			if err := json.Unmarshal([]byte(message), &keys); err == nil && string(keys.Protocol) == "key" {
+			if err2 := json.Unmarshal([]byte(message), &keys); err2 == nil && string(keys.Protocol) == "key" {
+				fmt.Println("Client: Successfully unmarshalled as key.")
 				pubkey, _ := x509.ParsePKIXPublicKey(keys.Publick)
 				c.serverKey = pubkey.(*rsa.PublicKey)
 				c.ui.SetServerKey(true)
+				fmt.Println("Client: Server key set.")
+			} else {
+				fmt.Println("Client: Failed to unmarshal as key. Error:", err2)
 			}
+				
 			continue
 		}
 
@@ -110,6 +116,7 @@ func (c *Client) SendMessage(message string) {
 }
 
 func (c *Client) JoinRoom(roomName string) {
+	fmt.Println("Client: Sending public key and room name...")
 	pemKey := x509.MarshalPKCS1PublicKey(c.publicKey)
 	keyss := chat.Keys{
 		Publick: pemKey,
@@ -118,6 +125,7 @@ func (c *Client) JoinRoom(roomName string) {
 	c.conn.Write(public)
 	c.conn.Write([]byte("\n"))
 	c.conn.Write([]byte(roomName + "\n"))
+	fmt.Println("Client: Done sending.")
 }
 
 func (c *Client) SendUsername(username string) {
