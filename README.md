@@ -25,7 +25,7 @@ Go Chat is a simple, secure, and real-time chat application written in Go. It al
    ```
 2. Navigate to the project directory:
    ```bash
-   cd go-chat
+   cd goRoomChat
    ```
 
 ### Running the Application
