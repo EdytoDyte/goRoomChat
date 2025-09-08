@@ -66,7 +66,7 @@ func (c *Client) handleIncomingMessages() {
 	for {
 		message, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Client: Error reading from server, exiting:", err)
+			fmt.Println("Connection closed")
 			os.Exit(0)
 		}
 		var proto struct{ Protocol []byte }
