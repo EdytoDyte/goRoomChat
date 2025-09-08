@@ -50,6 +50,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	// Read public key from client
 	hash, _ := reader.ReadString('\n')
+	fmt.Println("Server: Received data from client (potential public key).")
 	var keys chat.Keys
 	if err := json.Unmarshal([]byte(hash), &keys); err != nil {
 		fmt.Println(err)
@@ -60,7 +61,8 @@ func (s *Server) handleConnection(conn net.Conn) {
 	// Read room name from client
 	roomName, _ := reader.ReadString('\n')
 	roomName = strings.TrimSpace(roomName)
-
+	fmt.Println("Server: Received room name:", roomName)
+	
 	// Get or create room
 	room := s.getOrCreateRoom(roomName, conn)
 
@@ -216,6 +218,7 @@ func (s *Server) getOrCreateRoom(roomName string, conn net.Conn) *chat.Room {
 	}
 
 	// Send room public key to client
+	fmt.Println("Server: Sending room key to client.")
 	pemKey, _ := x509.MarshalPKIXPublicKey(room.PublicKey)
 	keyss := chat.Keys{
 		Protocol: []byte("key"),
