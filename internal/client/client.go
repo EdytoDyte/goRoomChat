@@ -1,177 +1,135 @@
 package client
 
 import (
+	"bufio"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
-	"strings"
+	"net"
+	"os"
 
-	"github.com/jroimartin/gocui"
+	"github.com/Go-Chat/pkg/chat"
 )
 
-type UI struct {
-	g             *gocui.Gui
-	client        *Client
-	serverKey     bool
-	roomName      string
-	username      string
-	waitingForKey bool
+type Client struct {
+	conn       net.Conn
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
+	serverKey  *rsa.PublicKey
+	ui         *UI
 }
 
-func NewUI(client *Client) *UI {
-	return &UI{
-		client: client,
+func NewClient() (*Client, error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, err
 	}
+	return &Client{
+		privateKey: privateKey,
+		publicKey:  &privateKey.PublicKey,
+	}, nil
 }
 
-func (ui *UI) Run() error {
-	g, err := gocui.NewGui(gocui.OutputNormal)
+func (c *Client) Start(addr string) error {
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
-	ui.g = g
-	defer ui.g.Close()
+	c.conn = conn
+	defer c.conn.Close()
 
-	ui.g.SetManagerFunc(ui.layout)
+	go c.handleIncomingMessages()
 
-	if err := ui.g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, ui.quit); err != nil {
+	c.ui = NewUI(c)
+	if err := c.ui.Run(); err != nil {
 		return err
-	}
-	if err := ui.g.SetKeybinding("room", gocui.KeyEnter, gocui.ModNone, ui.setRoom); err != nil {
-		return err
-	}
-	if err := ui.g.SetKeybinding("username", gocui.KeyEnter, gocui.ModNone, ui.setUsername); err != nil {
-		return err
-	}
-	if err := ui.g.SetKeybinding("input", gocui.KeyEnter, gocui.ModNone, ui.sendMessage); err != nil {
-		return err
-	}
-
-	if err := ui.g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		return err
-	}
-	return nil
-}
-
-func (ui *UI) layout(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
-
-	if ui.roomName == "" {
-		if v, err := g.SetView("room", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			v.Title = "Enter Room Name"
-			v.Editable = true
-			v.Wrap = true
-			if _, err := g.SetCurrentView("room"); err != nil {
-				return err
-			}
-		}
-	} else if ui.username == "" {
-		if v, err := g.SetView("username", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			v.Title = "Enter Username"
-			v.Editable = true
-			v.Wrap = true
-			if _, err := g.SetCurrentView("username"); err != nil {
-				return err
-			}
-		}
-	} else {
-		// Cleanup old views
-		g.DeleteView("username")
-		g.DeleteView("room")
-
-		// Create chat views
-		if v, err := g.SetView("messages", 0, 0, maxX-1, maxY-5); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			v.Title = fmt.Sprintf("Room: %s | User: %s", ui.roomName, ui.username)
-			v.Wrap = true
-			v.Autoscroll = true
-		}
-
-		if v, err := g.SetView("input", 0, maxY-5, maxX-1, maxY-1); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			v.Title = "Input"
-			v.Editable = true
-			v.Wrap = true
-			if _, err := g.SetCurrentView("input"); err != nil {
-				return err
-			}
-		}
-	}
-
-	if ui.waitingForKey && !ui.serverKey {
-		if v, err := g.SetView("popup", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			fmt.Fprintln(v, "Waiting for server key...")
-		}
 	}
 
 	return nil
 }
 
-func (ui *UI) quit(g *gocui.Gui, v *gocui.View) error {
-	return gocui.ErrQuit
-}
-
-func (ui *UI) setRoom(g *gocui.Gui, v *gocui.View) error {
-	roomName := strings.TrimSpace(v.Buffer())
-	if roomName != "" {
-		ui.roomName = roomName
-		ui.client.JoinRoom(roomName)
-		ui.waitingForKey = true
-		g.DeleteView("room")
-		// Don't set current view yet, wait for key
+func (c *Client) sendPublicKey() {
+	pemKey := x509.MarshalPKCS1PublicKey(c.publicKey)
+	keyss := chat.Keys{
+		Publick: pemKey,
 	}
-	return nil
+	public, _ := json.Marshal(keyss)
+	c.conn.Write(public)
+	c.conn.Write([]byte("\n"))
 }
 
-func (ui *UI) setUsername(g *gocui.Gui, v *gocui.View) error {
-	username := strings.TrimSpace(v.Buffer())
-	if username != "" {
-		ui.username = username
-		ui.client.SendUsername(username)
-	}
-	return nil
-}
-
-func (ui *UI) sendMessage(g *gocui.Gui, v *gocui.View) error {
-	message := strings.TrimSpace(v.Buffer())
-	if message != "" {
-		ui.client.SendMessage(message)
-		v.Clear()
-		v.SetCursor(0, 0)
-	}
-	return nil
-}
-
-func (ui *UI) UpdateMessages(message string) {
-	ui.g.Update(func(g *gocui.Gui) error {
-		v, err := g.View("messages")
+func (c *Client) handleIncomingMessages() {
+	reader := bufio.NewReader(c.conn)
+	for {
+		message, err := reader.ReadString('\n')
 		if err != nil {
-			return err
+			fmt.Println("Client: Error reading from server, exiting:", err)
+			os.Exit(0)
 		}
-		fmt.Fprintln(v, message)
-		return nil
-	})
+		var proto struct{ Protocol []byte }
+		if err := json.Unmarshal([]byte(message), &proto); err != nil {
+			continue
+		}
+
+		switch string(proto.Protocol) {
+		case "key":
+			var keys chat.Keys
+			if err := json.Unmarshal([]byte(message), &keys); err == nil {
+				pubkey, _ := x509.ParsePKIXPublicKey(keys.Publick)
+				c.serverKey = pubkey.(*rsa.PublicKey)
+				c.ui.SetServerKey(true)
+			}
+		case "msg":
+			var msg chat.Msges
+			if err := json.Unmarshal([]byte(message), &msg); err == nil {
+				decryptedMsg, err := c.decrypt(msg.Mensaje)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				c.ui.UpdateMessages(string(decryptedMsg))
+			}
+		}
+	}
 }
 
-func (ui *UI) SetServerKey(status bool) {
-	ui.serverKey = status
-	ui.waitingForKey = false
-	ui.g.Update(func(g *gocui.Gui) error {
-		g.DeleteView("popup")
-		if _, err := g.SetCurrentView("username"); err != nil {
-			return err
-		}
-		return ui.layout(g)
-	})
+func (c *Client) SendMessage(message string) {
+	encryptedMsg, err := c.encrypt([]byte(message))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	msg := chat.Msges{
+		Protocol: []byte("msg"),
+		Mensaje:  encryptedMsg,
+	}
+	msgJson, _ := json.Marshal(msg)
+	c.conn.Write(msgJson)
+	c.conn.Write([]byte("\n"))
+}
+
+func (c *Client) JoinRoom(roomName string) {
+	pemKey := x509.MarshalPKCS1PublicKey(c.publicKey)
+	keyss := chat.Keys{
+		Publick: pemKey,
+	}
+	public, _ := json.Marshal(keyss)
+	c.conn.Write(public)
+	c.conn.Write([]byte("\n"))
+	c.conn.Write([]byte(roomName + "\n"))
+}
+
+func (c *Client) SendUsername(username string) {
+	c.conn.Write([]byte(username + "\n"))
+}
+
+func (c *Client) encrypt(msg []byte) ([]byte, error) {
+	return rsa.EncryptOAEP(sha256.New(), rand.Reader, c.serverKey, msg, nil)
+}
+
+func (c *Client) decrypt(msg []byte) ([]byte, error) {
+	return rsa.DecryptOAEP(sha256.New(), rand.Reader, c.privateKey, msg, nil)
 }
