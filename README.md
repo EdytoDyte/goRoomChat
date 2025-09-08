@@ -1,43 +1,61 @@
-# goRoomChat
+# Go Chat
 
-Messaging Program
+Go Chat is a simple, secure, and real-time chat application written in Go. It allows users to create or join chat rooms and communicate with each other using encrypted messages.
 
-The project is set up to work locally, please note that if you want to make it work globally, you will need to change the configuration of the client.
+## Features
 
-Communicate with other users through virtual chat rooms with our messaging program. With the following options available:
+- **Secure Communication:** All messages are end-to-end encrypted using RSA encryption.
+- **Chat Rooms:** Create your own chat rooms or join existing ones.
+- **Real-time Messaging:** Messages are delivered in real-time to all users in a room.
+- **List Rooms:** Get a list of all available chat rooms.
+- **List Users:** Get a list of all users in the current chat room.
+- **Private Messaging:** Send private messages to other users in the same room.
 
---- Create Room ---
-Create your own personalized chat room and invite others to join.
+## Getting Started
 
---- Join Room ---
-Search for and join existing chat rooms created by other users.
+### Prerequisites
 
---- Exit Application ---
-Log out and close the application.
+- [Go](https://golang.org/dl/) (version 1.15 or later)
 
-Additionally, we offer two messaging options:
+### Installation
 
---- Encrypted Messages ---
-Send encrypted messages for added security and privacy.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Go-Chat/go-chat.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd go-chat
+   ```
 
---- Non-Encrypted Messages ---
-Send regular, non-encrypted messages.
+### Running the Application
 
-Our messaging program provides users with a convenient and secure way to communicate with each other, with a range of options to suit their needs.
+1. **Start the server:**
+   ```bash
+   go run cmd/server/main.go
+   ```
+   The server will start listening on port `8080`.
 
-Example 1:
+2. **Start the client:**
+   ```bash
+   go run cmd/client/main.go
+   ```
+   A new terminal window will open with the chat client.
 
-When we start the program, these options will appear.
-<br>
-![image](https://user-images.githubusercontent.com/107671943/217294141-cc7faa6b-f878-43b5-8339-75be74c1dba0.png)
-<br>
-For example, if we choose the first option, we will create a room and we will have to add its name and our username.
-<br>
-![image](https://user-images.githubusercontent.com/107671943/217294812-3fc3fbd6-e67b-43c7-9654-8546b0ffa530.png)
-<br>
-Finally, a chat room will appear in which we can talk
-<br>
-![image](https://user-images.githubusercontent.com/107671943/217295408-05fdabf7-ec62-4ca4-bef2-81f58210ed76.png)
-<br>
-![image](https://user-images.githubusercontent.com/107671943/217295474-5fa89414-46df-4221-be68-eb135e9a7cc6.png)
-<br>
+## How to Use
+
+1. **Enter a room name:** When you start the client, you will be prompted to enter a room name. If the room doesn't exist, it will be created for you.
+
+2. **Enter a username:** After entering a room name, you will be prompted to enter a username. This will be your display name in the chat room.
+
+3. **Chat:** Once you've entered a room and username, you can start sending messages to the room.
+
+### Commands
+
+- `/rooms`: Get a list of all available chat rooms.
+- `/users`: Get a list of all users in the current chat room.
+- `/msg <user> <message>`: Send a private message to the specified user.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

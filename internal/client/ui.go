@@ -11,6 +11,8 @@ type UI struct {
 	g         *gocui.Gui
 	client    *Client
 	serverKey bool
+	roomName  string
+	username  string
 }
 
 func NewUI(client *Client) *UI {
@@ -32,6 +34,12 @@ func (ui *UI) Run() error {
 	if err := ui.g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, ui.quit); err != nil {
 		return err
 	}
+	if err := ui.g.SetKeybinding("room", gocui.KeyEnter, gocui.ModNone, ui.setRoom); err != nil {
+		return err
+	}
+	if err := ui.g.SetKeybinding("username", gocui.KeyEnter, gocui.ModNone, ui.setUsername); err != nil {
+		return err
+	}
 	if err := ui.g.SetKeybinding("input", gocui.KeyEnter, gocui.ModNone, ui.sendMessage); err != nil {
 		return err
 	}
@@ -44,24 +52,51 @@ func (ui *UI) Run() error {
 
 func (ui *UI) layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("messages", 0, 0, maxX-1, maxY-5); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		v.Title = "Messages"
-		v.Wrap = true
-		v.Autoscroll = true
-	}
 
-	if v, err := g.SetView("input", 0, maxY-5, maxX-1, maxY-1); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
+	if ui.roomName == "" {
+		if v, err := g.SetView("room", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			v.Title = "Enter Room Name"
+			v.Editable = true
+			v.Wrap = true
+			if _, err := g.SetCurrentView("room"); err != nil {
+				return err
+			}
 		}
-		v.Title = "Input"
-		v.Editable = true
-		v.Wrap = true
-		if _, err := g.SetCurrentView("input"); err != nil {
-			return err
+	} else if ui.username == "" {
+		if v, err := g.SetView("username", maxX/2-15, maxY/2-1, maxX/2+15, maxY/2+1); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			v.Title = "Enter Username"
+			v.Editable = true
+			v.Wrap = true
+			if _, err := g.SetCurrentView("username"); err != nil {
+				return err
+			}
+		}
+	} else {
+		if v, err := g.SetView("messages", 0, 0, maxX-1, maxY-5); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			v.Title = fmt.Sprintf("Room: %s | User: %s", ui.roomName, ui.username)
+			v.Wrap = true
+			v.Autoscroll = true
+		}
+
+		if v, err := g.SetView("input", 0, maxY-5, maxX-1, maxY-1); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			v.Title = "Input"
+			v.Editable = true
+			v.Wrap = true
+			if _, err := g.SetCurrentView("input"); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -81,6 +116,32 @@ func (ui *UI) layout(g *gocui.Gui) error {
 
 func (ui *UI) quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
+}
+
+func (ui *UI) setRoom(g *gocui.Gui, v *gocui.View) error {
+	roomName := strings.TrimSpace(v.Buffer())
+	if roomName != "" {
+		ui.roomName = roomName
+		ui.client.JoinRoom(roomName)
+		g.DeleteView("room")
+		if _, err := g.SetCurrentView("username"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ui *UI) setUsername(g *gocui.Gui, v *gocui.View) error {
+	username := strings.TrimSpace(v.Buffer())
+	if username != "" {
+		ui.username = username
+		ui.client.SendUsername(username)
+		g.DeleteView("username")
+		if _, err := g.SetCurrentView("input"); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (ui *UI) sendMessage(g *gocui.Gui, v *gocui.View) error {
@@ -109,12 +170,4 @@ func (ui *UI) SetServerKey(status bool) {
 	ui.g.Update(func(g *gocui.Gui) error {
 		return ui.layout(g)
 	})
-}
-
-func (ui *UI) ShowRoomPrompt() {
-	// This will be implemented in a later step
-}
-
-func (ui *UI) ShowUsernamePrompt() {
-	// This will be implemented in a later step
 }

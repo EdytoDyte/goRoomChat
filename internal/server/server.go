@@ -99,8 +99,104 @@ func (s *Server) handleConnection(conn net.Conn) {
 			continue
 		}
 
+		if strings.HasPrefix(string(decryptedMsg), "/rooms") {
+			s.listRooms(client)
+			continue
+		}
+
+		if strings.HasPrefix(string(decryptedMsg), "/users") {
+			s.listUsers(client)
+			continue
+		}
+
+		if strings.HasPrefix(string(decryptedMsg), "/msg") {
+			parts := strings.SplitN(string(decryptedMsg), " ", 3)
+			if len(parts) < 3 {
+				s.sendMessage("Usage: /msg <user> <message>", client)
+				continue
+			}
+			s.privateMessage(parts[1], parts[2], client)
+			continue
+		}
+
 		s.broadcast(fmt.Sprintf("%s: %s\n", username, string(decryptedMsg)), room)
 	}
+}
+
+func (s *Server) listRooms(client *chat.Client) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	var rooms []string
+	for name := range s.rooms {
+		rooms = append(rooms, name)
+	}
+
+	msg := strings.Join(rooms, ", ")
+	encryptedMsg, err := s.encrypt([]byte(msg), client.PubKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	msgJSON, _ := json.Marshal(chat.Msges{
+		Protocol: []byte("msg"),
+		Mensaje:  encryptedMsg,
+	})
+	client.Conn.Write(msgJSON)
+	client.Conn.Write([]byte("\n"))
+}
+
+func (s *Server) privateMessage(username, message string, sender *chat.Client) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	for _, client := range sender.Room.Clients {
+		if client.Name == username {
+			s.sendMessage(fmt.Sprintf("(private) %s: %s", sender.Name, message), client)
+			return
+		}
+	}
+	s.sendMessage(fmt.Sprintf("User %s not found", username), sender)
+}
+
+func (s *Server) sendMessage(message string, client *chat.Client) {
+	encryptedMsg, err := s.encrypt([]byte(message), client.PubKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	msgJSON, _ := json.Marshal(chat.Msges{
+		Protocol: []byte("msg"),
+		Mensaje:  encryptedMsg,
+	})
+	client.Conn.Write(msgJSON)
+	client.Conn.Write([]byte("\n"))
+}
+
+func (s *Server) listUsers(client *chat.Client) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	var users []string
+	for _, c := range client.Room.Clients {
+		users = append(users, c.Name)
+	}
+
+	msg := strings.Join(users, ", ")
+	encryptedMsg, err := s.encrypt([]byte(msg), client.PubKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	msgJSON, _ := json.Marshal(chat.Msges{
+		Protocol: []byte("msg"),
+		Mensaje:  encryptedMsg,
+	})
+	client.Conn.Write(msgJSON)
+	client.Conn.Write([]byte("\n"))
 }
 
 func (s *Server) getOrCreateRoom(roomName string, conn net.Conn) *chat.Room {
