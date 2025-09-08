@@ -113,8 +113,8 @@ func (c *Client) JoinRoom(roomName string) {
 	c.conn.Write([]byte(roomName + "\n"))
 }
 
-func (c.Client) SendUsername(username string) {
-    c.conn.Write([]byte(username + "\n"))
+func (c *Client) SendUsername(username string) {
+	c.conn.Write([]byte(username + "\n"))
 }
 
 func (c *Client) encrypt(msg []byte) ([]byte, error) {
