@@ -47,9 +47,9 @@ func (s *Server) Start(addr string) error {
 
 func (s *Server) handleConnection(conn net.Conn) {
 	defer conn.Close()
-
+	reader := bufio.NewReader(conn)
 	// Read public key from client
-	hash, _ := bufio.NewReader(conn).ReadString('\n')
+	hash, _ := reader.ReadString('\n')
 	var keys chat.Keys
 	if err := json.Unmarshal([]byte(hash), &keys); err != nil {
 		fmt.Println(err)
@@ -58,14 +58,14 @@ func (s *Server) handleConnection(conn net.Conn) {
 	pubKey, _ := x509.ParsePKCS1PublicKey(keys.Publick)
 
 	// Read room name from client
-	roomName, _ := bufio.NewReader(conn).ReadString('\n')
+	roomName, _ := reader.ReadString('\n')
 	roomName = strings.TrimSpace(roomName)
 
 	// Get or create room
 	room := s.getOrCreateRoom(roomName, conn)
 
 	// Read username from client
-	username, _ := bufio.NewReader(conn).ReadString('\n')
+	username, _ := reader.ReadString('\n')
 	username = strings.TrimSpace(username)
 
 	client := &chat.Client{
@@ -80,7 +80,7 @@ func (s *Server) handleConnection(conn net.Conn) {
 
 	for {
 		// Read message from client
-		message, err := bufio.NewReader(conn).ReadString('\n')
+		message, err := reader.ReadString('\n')
 		if err != nil {
 			s.broadcast(fmt.Sprintf("::: %s has left the room :::\n", username), room)
 			delete(room.Clients, conn)
