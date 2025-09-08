@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 
-
 	"github.com/Go-Chat/pkg/chat"
 )
 
@@ -42,8 +41,6 @@ func (c *Client) Start(addr string) error {
 	c.conn = conn
 	defer c.conn.Close()
 
-
-
 	go c.handleIncomingMessages()
 
 	c.ui = NewUI(c)
@@ -72,31 +69,30 @@ func (c *Client) handleIncomingMessages() {
 			fmt.Println("Connection closed")
 			os.Exit(0)
 		}
-		
-		var msg chat.Msges
-		if err := json.Unmarshal([]byte(message), &msg); err != nil {
-				fmt.Println("Client: Failed to unmarshal as standard message. Trying as key...")
-			// It might be the server's public key
-			var keys chat.Keys
-			if err2 := json.Unmarshal([]byte(message), &keys); err2 == nil && string(keys.Protocol) == "key" {
-				
-				pubkey, _ := x509.ParsePKIXPublicKey(keys.Publick)
-				c.serverKey = pubkey.(*rsa.PublicKey)
-				c.ui.SetServerKey(true)
-				fmt.Println("Client: Server key set.")
-			} else {
-				fmt.Println("Client: Failed to unmarshal as key. Error:", err2)
-			}
-				
+		var proto struct{ Protocol []byte }
+		if err := json.Unmarshal([]byte(message), &proto); err != nil {
 			continue
 		}
 
-		decryptedMsg, err := c.decrypt(msg.Mensaje)
-		if err != nil {
-			fmt.Println(err)
-			continue
+		switch string(proto.Protocol) {
+		case "key":
+			var keys chat.Keys
+			if err := json.Unmarshal([]byte(message), &keys); err == nil {
+				pubkey, _ := x509.ParsePKIXPublicKey(keys.Publick)
+				c.serverKey = pubkey.(*rsa.PublicKey)
+				c.ui.SetServerKey(true)
+			}
+		case "msg":
+			var msg chat.Msges
+			if err := json.Unmarshal([]byte(message), &msg); err == nil {
+				decryptedMsg, err := c.decrypt(msg.Mensaje)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				c.ui.UpdateMessages(string(decryptedMsg))
+			}
 		}
-		c.ui.UpdateMessages(string(decryptedMsg))
 	}
 }
 
@@ -116,7 +112,6 @@ func (c *Client) SendMessage(message string) {
 }
 
 func (c *Client) JoinRoom(roomName string) {
-	
 	pemKey := x509.MarshalPKCS1PublicKey(c.publicKey)
 	keyss := chat.Keys{
 		Publick: pemKey,
@@ -125,7 +120,6 @@ func (c *Client) JoinRoom(roomName string) {
 	c.conn.Write(public)
 	c.conn.Write([]byte("\n"))
 	c.conn.Write([]byte(roomName + "\n"))
-	fmt.Println("Client: Done sending.")
 }
 
 func (c *Client) SendUsername(username string) {
